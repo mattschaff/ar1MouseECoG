@@ -13,6 +13,7 @@
     phase_planar = spatial_freq*(-cos(theta)*X + sin(theta)*Y);
     figure(1);
     imagesc(phase_planar);
+    colorbar;
     title('Planar Wave Phase Distribution');
 
     %movie
@@ -36,6 +37,7 @@
     phase_target = -spatial_freq*sqrt((X-x_center).^2 + (Y-y_center).^2);
     figure(3);
     imagesc(phase_target);
+    colorbar;
     title('Target Wave Phase Distribution');
 
     %movie
@@ -59,7 +61,8 @@
     %phase distribution
     phase_rotational = spatial_freq*atan2(Y-y_center, X-x_center);
     figure(5);
-    imagesc(cos(phase_rotational));
+    imagesc(phase_rotational);
+    colorbar;
     title('Rotational Wave Phase Distribution');
     
     %movie
