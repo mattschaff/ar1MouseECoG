@@ -50,7 +50,7 @@ function [data] = populate_wave(wave_data, x_grid, y_grid, times)
                 freq = wave_data.temp_freq(i);
 
                 %phase distribution
-                phase = spatial_freq*atan2(Y-y_center, X-x_center);
+                phase = -spatial_freq*sqrt((X-x_center).^2 + (Y-y_center).^2);
 
                 %wave distribution
                 data(:,:,timesteps(i)) = A*cos(freq*times(i) + phase);
