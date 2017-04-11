@@ -12,7 +12,7 @@ function [data] = populate_wave(wave_data, x_grid, y_grid, times)
         case 'plane'
             for i = 1:maxTime
                 %vars
-                theta = pi/4;
+                theta = wave_data.theta(i);
                 spatial_freq = wave_data.spatial_freq(i);
                 A = wave_data.amplitude(i);
                 freq = wave_data.temp_freq(i);
