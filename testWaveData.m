@@ -5,7 +5,7 @@
         wave_array(i).y_center = ones(1,5000);
         wave_array(i).x_center = ones(1,5000);
         wave_array(i).theta = ones(1,5000);
-        wave_array(i).temp_freq = ones(1,5000);
+        wave_array(i).temp_freq = ones(1,5000)*0.1;
         wave_array(i).spatial_freq = ones(1,5000);
         wave_array(i).amplitude = ones(1,5000);
         wave_array(i).timesteps = [1:5000];
@@ -14,9 +14,9 @@
     
     x = -1:0.1:1;
     [X, Y] = meshgrid(x, x);
-    times = 1:5000;
+    times = 1:500;
     
-    data = populate_wave(wave_array(i), X, Y, times);
+    data = populate_wave(wave_array(1), X, Y, times);
     
     figure(1);
     clf;

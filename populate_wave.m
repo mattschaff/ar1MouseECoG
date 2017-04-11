@@ -6,9 +6,11 @@ function [data] = populate_wave(wave_data, x_grid, y_grid, times)
     
     timesteps = wave_data.timesteps;
     
+    maxTime = min(length(times), length(timesteps));
+    
     switch wave_data.type
         case 'plane'
-            for i = 1:length(timesteps)
+            for i = 1:maxTime
                 %vars
                 theta = pi/4;
                 spatial_freq = wave_data.spatial_freq(i);
@@ -23,7 +25,7 @@ function [data] = populate_wave(wave_data, x_grid, y_grid, times)
             end
             
         case 'rotational'
-            for i = 1:length(timesteps)
+            for i = 1:maxTime
                 %vars
                 x_center = wave_data.x_center(i);
                 y_center = wave_data.y_center(i);
@@ -39,7 +41,7 @@ function [data] = populate_wave(wave_data, x_grid, y_grid, times)
             end
 
         case 'target'
-            for i = 1:length(timesteps)
+            for i = 1:maxTime
                 %vars
                 x_center = wave_data.x_center(i);
                 y_center = wave_data.y_center(i);
