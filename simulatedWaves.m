@@ -21,9 +21,12 @@
     freq = 2*(2*pi/movie_length);
     figure(2);
     for t=1:movie_length
+        tic;
         imagesc(cos(t*freq + phase_planar));
         title(['Time: ' num2str(t) '; Movie Length: ' num2str(movie_length)]);
-        pause(0.001);
+        caxis([-1,1]);
+        pause(0.1);
+        toc;
     end
 
 %% Target Wave Phase Distribution
@@ -48,6 +51,7 @@
         imagesc(cos(t*freq + phase_target));
         title(['Time: ' num2str(t) '; Movie Length: ' num2str(movie_length)]);
         colorbar;
+        caxis([-1,1]);
         pause(0.001);
     end
 
