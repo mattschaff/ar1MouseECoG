@@ -47,7 +47,7 @@
     x = -1:0.1:1;
     y = 0;
     [X, Y] = meshgrid(x, y);
-    times = 1:500;
+    times = (1:500)*.001;
     
     data1 = populate_wave(wave_array(1), X, Y, times);
     data2 = populate_wave(wave_array(2), X, Y, times);

@@ -1,4 +1,8 @@
 function [data] = populate_wave(wave_data, x_grid, y_grid, times)
+    % Inputs:
+    % time:     always in seconds, this is important for giving you the
+    %           correct sampling rate
+    
     data = zeros(size(x_grid,1), size(y_grid,2), length(times));
     
     X = x_grid;
@@ -21,7 +25,7 @@ function [data] = populate_wave(wave_data, x_grid, y_grid, times)
                 phase = spatial_freq*(-cos(theta)*X + sin(theta)*Y);
 
                 %wave distribution
-                data(:,:,timesteps(i)) = A*cos(freq*times(i) + phase);
+                data(:,:,timesteps(i)) = A*cos((freq*times(i))*(2*pi) + phase);
             end
             
         case 'rotational'
@@ -37,7 +41,7 @@ function [data] = populate_wave(wave_data, x_grid, y_grid, times)
                 phase = spatial_freq*atan2(x_grid-y_center, y_grid-x_center);
 
                 %wave distribution
-                data(:,:,timesteps(i)) = A*cos(freq*times(i) + phase);
+                data(:,:,timesteps(i)) = A*cos((freq*times(i))*(2*pi) + phase);
             end
 
         case 'target'
@@ -53,7 +57,7 @@ function [data] = populate_wave(wave_data, x_grid, y_grid, times)
                 phase = -spatial_freq*sqrt((X-x_center).^2 + (Y-y_center).^2);
 
                 %wave distribution
-                data(:,:,timesteps(i)) = A*cos(freq*times(i) + phase);
+                data(:,:,timesteps(i)) = A*cos((freq*times(i))*(2*pi) + phase);
             end
 
         end
