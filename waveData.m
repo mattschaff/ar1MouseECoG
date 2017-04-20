@@ -127,4 +127,20 @@ end
 % check efficacy as N --> inf
 % also check random phase distribution
 
-%% EXPERIMENTAL CASE: Mouse ECoG Data
+%% EXPERIMENTAL CASE: Human ECoG data
+
+data = HUP119.data;
+srate = HUP119.srate;
+freq = 10.^(0:.1:3);
+c = 50;
+
+% 5th input is for baseline: no baseline correction here
+[wvlt_amp, wvlt_phase] = morletwave(freq,c,data,srate,0);
+
+%peaks(i) = max(wvlt_amp(:,:,1));
+%%
+clf;
+imagesc((1:size(data,2))./srate, [], squeeze(wvlt_amp(:,:,1)))
+colorbar
+set(gca, 'yticklabel', [{'2.5'}, {'7.9'}]);
+xlabel('Time (s)'); ylabel('Frequency Hz'); title('Power Spectra')
