@@ -1,9 +1,5 @@
-%% TEST CASE 1: Similar Frequency
-% 2 waves with some frequency (temporal & spatial)
-% check efficacy as lim(d_freq) --> 0
-% randomize other parameters (including wave type)
-
-% make data
+%% TEST CASE 0: Does it work% 
+%make data
 wave_array = struct();
 for i=1:3
     wave_array(i).type = 'plane';
@@ -139,6 +135,11 @@ for i = 1:size(eig_val,2)
 end
 
 %????
+%% Test Case 1: Similar Frequency
+% 2 waves with some frequency (temporal & spatial)
+% check efficacy as lim(d_freq) --> 0
+% randomize other parameters (including wave type)
+
 
 %% TEST CASE 2: Noisiness
 % N waves with varying noise
@@ -154,6 +155,51 @@ end
 % 1 wave with varying parameters over time (esp amplitude)
 % check efficacy as freq(parameter change) --> inf
 % randomize other parameters (including wave type)
+
+srate = 1000;
+temp_freqs = 1:1:100;
+base_freq = 200; %in Hz
+delta_freq = 70; % how much to change by
+
+%make data
+wave_array = struct();
+for i=1
+    wave_array(i).type = 'plane';
+    wave_array(i).y_center = ones(1,5000);
+    wave_array(i).x_center = ones(1,5000);
+    wave_array(i).theta = ones(1,5000);
+    wave_array(i).temp_freq = ones(1,5000);
+    wave_array(i).spatial_freq = ones(1,5000)*5;
+    wave_array(i).amplitude = ones(1,5000);
+    wave_array(i).timesteps = [1:5000]; %in s
+end
+
+% add changing freq over time
+wave_array(1).theta = ones(1,5000).*0;
+wave_array(1).temp_freq = base_freq + delta_freq.*(sin((temp_freqs(k).*(2*pi))./srate*(1:5000)));
+
+%initialize grid
+x = -1:0.01:1;
+y = 0;
+[X, Y] = meshgrid(x, y);
+times = (1:5000)*(1/srate);
+
+data = populate_wave(wave_array(1), X, Y, times);
+%data = data + normrnd(0,.3,size(data));
+
+% plot wave
+for i = 1:size(data,3)
+    ext = sprintf('%04d',i);
+    imagesc(data(:,:,i));
+    colorbar
+    caxis([-2 2])
+    title(ext);
+    saveas(gca,['/Users/mschaff/Documents/MATLAB/ar1MouseECoG/images/freq_disc_wave/', ext, '.jpg'], 'jpg')
+    pause(0.01);
+end
+
+% wave done, now use wavelet to get phase
+
 
 %% TEST CASE 5: Phase Distribution
 % N identical waves with varying positions on a 2D grid
