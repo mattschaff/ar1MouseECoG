@@ -139,7 +139,33 @@ end
 % 2 waves with some frequency (temporal & spatial)
 % check efficacy as lim(d_freq) --> 0
 % randomize other parameters (including wave type)
+ srate = 1000;
+temp_freqs = 2;
+base_freq = 200; %in Hz
+delta_freq = 10; % how much to change by
+k=1;
 
+%make data
+wave_array = struct();
+for i=1:2
+    wave_array(i).type = 'plane';
+    wave_array(i).y_center = ones(1,5000);
+    wave_array(i).x_center = ones(1,5000);
+    wave_array(i).theta = ones(1,5000);
+    wave_array(i).temp_freq = ones(1,5000);
+    wave_array(i).spatial_freq = ones(1,5000)*5;
+    wave_array(i).amplitude = ones(1,5000);
+    wave_array(i).timesteps = [1:5000]; %in s
+end
+
+% add changing freq over time
+wave_array(1).temp_freq = base_freq - delta_freq.*(sin((temp_freqs(k).*(2*pi))./srate*(1:5000)));
+
+%initialize grid
+x = -1:0.01:1;
+y = 0;
+[X, Y] = meshgrid(x, y);
+times = (1:5000)*(1/srate);
 
 %% TEST CASE 2: Noisiness
 % N waves with varying noise
@@ -157,9 +183,10 @@ end
 % randomize other parameters (including wave type)
 
 srate = 1000;
-temp_freqs = 1:1:100;
-base_freq = 200; %in Hz
-delta_freq = 70; % how much to change by
+temp_freqs = 5;
+base_freq = 35; %in Hz
+delta_freq = 1; % how much to change by
+k=1;
 
 %make data
 wave_array = struct();
@@ -175,31 +202,129 @@ for i=1
 end
 
 % add changing freq over time
-wave_array(1).theta = ones(1,5000).*0;
-wave_array(1).temp_freq = base_freq + delta_freq.*(sin((temp_freqs(k).*(2*pi))./srate*(1:5000)));
+wave_array(1).temp_freq = base_freq - delta_freq.*(sin((temp_freqs(k).*(2*pi))./srate*(1:5000)));
 
 %initialize grid
-x = -1:0.01:1;
+x = -1:0.1:1;
 y = 0;
 [X, Y] = meshgrid(x, y);
 times = (1:5000)*(1/srate);
 
 data = populate_wave(wave_array(1), X, Y, times);
-%data = data + normrnd(0,.3,size(data));
+combined_data_rand = data;% + normrnd(0,2,size(data));
+combined_data = combined_data_rand; %for ar1
+yetAnotherData = data;
 
-% plot wave
-for i = 1:size(data,3)
-    ext = sprintf('%04d',i);
-    imagesc(data(:,:,i));
-    colorbar
-    caxis([-2 2])
-    title(ext);
-    saveas(gca,['/Users/mschaff/Documents/MATLAB/ar1MouseECoG/images/freq_disc_wave/', ext, '.jpg'], 'jpg')
-    pause(0.01);
-end
+% % plot wave
+% for i = 1:size(data,3)
+%     ext = sprintf('%04d',i);
+%     imagesc(data(:,:,i));
+%     colorbar
+%     caxis([-2 2])
+%     title(ext);
+%     saveas(gca,['/Users/mschaff/Documents/MATLAB/ar1MouseECoG/images/freq_disc_wave/', ext, '.jpg'], 'jpg')
+%     pause(0.01);
+% end
 
 % wave done, now use wavelet to get phase
+freq = 1:.1:100;
+srate = 1000;
+window = 3;
 
+% visualize peaks at pi*frequency. The change in power is due to how the
+% wavelet cuts off parts of the window based on the window size
+c = window*pi;
+
+% 5th input is for baseline: no baseline correction here
+[wvlt_amp, ~] = morletwave(freq,c,squeeze(combined_data_rand),srate,0);
+
+%peaks(i) = max(wvlt_amp(:,:,1));
+
+% ar1
+%define constants
+win = numel(x)*3; % twice the number of electrodes
+n_tp = size(combined_data_rand, 3);
+data = reshape(combined_data_rand, [] ,n_tp);
+n_eig = 4;
+
+% initialize A - elec x elec x time
+A = zeros(numel(x), numel(x), (n_tp - win));
+% initialize eigenvalues and vectors
+eig_vect = zeros(numel(x), n_eig, (n_tp - win));
+eig_val = zeros(n_eig, (n_tp - win));
+
+parfor i = 1:n_tp - win
+    A_curr = zeros(numel(x), numel(x));
+    fprintf('\n...%d', i)
+    % get time chunk
+    data_chunk = data(:,i:i+win);
+    
+    % demean
+    data_chunk = data_chunk - mean(data_chunk, 2);
+   % y = data_chunk(:,2:end);
+   % x_hat = data_chunk(:, 1:end-1);
+    
+    % get A
+    [w,A_curr,C] = arfit(data_chunk',1,1,'sbc'); % data_n should be a time chunk;
+    %for j = 1:numel(x)
+    %    A_curr(j,:) = y(j,:)'\x_hat';
+    %end
+
+    A(:,:,i) = A_curr;
+    [vect, val] = eigs(A_curr, n_eig);
+    eig_val(:,i) = diag(val);
+    eig_vect(:,:,i) = vect;
+end
+
+% raw data plot
+
+%clf
+%plot(squeeze(combined_data_rand(1,1,win+1:n_tp)) + 35, 'r')
+%hold on
+%plot((1:n_tp - win), wave_array(1).temp_freq(win+1:n_tp), 'b')
+
+
+rawData = squeeze(yetAnotherData(1,1,:));
+[~, peakTimes] = findpeaks(rawData);
+
+frequencyTimes = peakTimes;
+frequencies = diff(peakTimes);
+frequencies(end+1) = frequencies(end);
+
+%scatter(frequencyTimes, srate./frequencies);
+
+trueFrequencies = interp1(frequencyTimes, srate./frequencies, 1:5000);
+
+sigma = 50;
+x = -3*sigma:3*sigma;
+gaussianFilter = exp(-x.^2/(2*sigma^2));
+gaussianFilter = gaussianFilter ./ sum(gaussianFilter);
+
+trueFrequencies = convn(trueFrequencies, gaussianFilter, 'same');
+
+%clf
+%plot(trueFrequencies);
+
+%plot
+figure(2)
+clf
+plot((((1:n_tp - win) - win/2)./srate), (angle(eig_val(1,:))./(2*pi))*srate, 'r')
+hold on
+plot((1:n_tp - win)./srate, trueFrequencies(win+1:n_tp), 'b')
+%plot((1:n_tp - win)./srate, (angle(eig_val(3,:))./(2*pi))*srate, 'b')
+legend('Eigenvalue 1', 'True Wave')
+%ylabel('Frequency (Hz)'); 
+xlabel('Time (s)') 
+xlim([win, n_tp]./srate);
+
+figure(1)
+clf;
+imagesc(1:5000, freq, squeeze(wvlt_amp(:,:,1)))
+hold on
+plot(1:5000, trueFrequencies, 'w')
+colorbar
+%caxis([0, 20])
+pause(.001)
 
 %% TEST CASE 5: Phase Distribution
 % N identical waves with varying positions on a 2D grid
@@ -217,7 +342,7 @@ c = 20;
 [wvlt_amp, wvlt_phase] = morletwave(freq,c,data,srate,0);
 wvlt_amp_zscore = zscore(wvlt_amp, [], 2);
 
-%%
+%
 clf;
 imagesc((1:size(data,2))./srate, [], squeeze(wvlt_amp_zscore(:,:,1)))
 colorbar
