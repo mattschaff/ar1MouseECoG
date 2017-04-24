@@ -102,37 +102,42 @@ end
 
 %% AR1
 
+% ar1
 %define constants
-win = numel(x)*2; % twice the number of electrodes
+win = numel(x)*3; % twice the number of electrodes
 n_tp = size(combined_data_rand, 3);
 data = reshape(combined_data_rand, [] ,n_tp);
+n_eig = 4;
 
 % initialize A - elec x elec x time
 A = zeros(numel(x), numel(x), (n_tp - win));
-for i = 1:n_tp - win
+% initialize eigenvalues and vectors
+eig_vect = zeros(numel(x), n_eig, (n_tp - win));
+eig_val = zeros(n_eig, (n_tp - win));
+
+parfor i = 1:n_tp - win
+    A_curr = zeros(numel(x), numel(x));
     fprintf('\n...%d', i)
     % get time chunk
     data_chunk = data(:,i:i+win);
     
     % demean
     data_chunk = data_chunk - mean(data_chunk, 2);
+   % y = data_chunk(:,2:end);
+   % x_hat = data_chunk(:, 1:end-1);
     
     % get A
     [w,A_curr,C] = arfit(data_chunk',1,1,'sbc'); % data_n should be a time chunk;
-    
-    A(:,:,i) = A_curr;
-end
+    %for j = 1:numel(x)
+    %    A_curr(j,:) = y(j,:)'\x_hat';
+    %end
 
-% initialize eigenvalues and vectors
-eig_vect = zeros(numel(x), numel(x), (n_tp - win));
-eig_val = zeros(numel(x), (n_tp - win));
-for i = 1:size(eig_val,2)
-    fprintf('\n...%d', i)
-    A_curr = A(:,:,i);
-    [vect, val] = eig(A_curr);
+    A(:,:,i) = A_curr;
+    [vect, val] = eigs(A_curr, n_eig);
     eig_val(:,i) = diag(val);
     eig_vect(:,:,i) = vect;
 end
+ % plot the vector from the largest eignevalues
 
 %????
 %% Test Case 1: Similar Frequency
@@ -336,16 +341,49 @@ pause(.001)
 data = HUP119.data;
 srate = HUP119.srate;
 freq = 10.^(0:.01:3);
-c = 20;
+c = 8*pi;
 
 % 5th input is for baseline: no baseline correction here
 [wvlt_amp, wvlt_phase] = morletwave(freq,c,data,srate,0);
 wvlt_amp_zscore = zscore(wvlt_amp, [], 2);
 
-%
+
+% phases
+figure(1)
 clf;
-imagesc((1:size(data,2))./srate, [], squeeze(wvlt_amp_zscore(:,:,1)))
+imagesc(1:size(data,1), freq, squeeze(wvlt_phase(:,2500,:)))
 colorbar
-caxis([-4,4])
-%set(gca, 'yticklabel', [{'2.5'}, {'7.9'}]);
-xlabel('Time (s)'); ylabel('Frequency Hz'); title('Power Spectra')
+
+% AR1
+
+%define constants
+win = numel(x)*2; % twice the number of electrodes
+n_tp = size(combined_data_rand, 3);
+data = reshape(combined_data_rand, [] ,n_tp);
+
+% initialize A - elec x elec x time
+A = zeros(numel(x), numel(x), (n_tp - win));
+for i = 1:n_tp - win
+    fprintf('\n...%d', i)
+    % get time chunk
+    data_chunk = data(:,i:i+win);
+    
+    % demean
+    data_chunk = data_chunk - mean(data_chunk, 2);
+    
+    % get A
+    [w,A_curr,C] = arfit(data_chunk',1,1,'sbc'); % data_n should be a time chunk;
+    
+    A(:,:,i) = A_curr;
+end
+
+% initialize eigenvalues and vectors
+eig_vect = zeros(numel(x), numel(x), (n_tp - win));
+eig_val = zeros(numel(x), (n_tp - win));
+for i = 1:size(eig_val,2)
+    fprintf('\n...%d', i)
+    A_curr = A(:,:,i);
+    [vect, val] = eig(A_curr);
+    eig_val(:,i) = diag(val);
+    eig_vect(:,:,i) = vect;
+end
