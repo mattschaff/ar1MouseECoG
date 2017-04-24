@@ -33,7 +33,7 @@ data2 = populate_wave(wave_array(2), X, Y, times);
 combined_data = data1 + data2 + data3;
 combined_data_rand = combined_data + normrnd(0,.3,size(data1));
 
-% FFT
+%% FFT
 % this function is in the EEGPLOT toolbox
 %addpath(genpath([pwd '/powerpectra/eeglab14_0_0b']));
 % third input is srate
@@ -104,8 +104,41 @@ for i = movie_times
     pause(.001)
 end
 
-% AR1
+%% AR1
 
+%define constants
+win = numel(x)*2; % twice the number of electrodes
+n_tp = size(combined_data_rand, 3);
+data = reshape(combined_data_rand, [] ,n_tp);
+
+% initialize A - elec x elec x time
+A = zeros(numel(x), numel(x), (n_tp - win));
+for i = 1:n_tp - win
+    fprintf('\n...%d', i)
+    % get time chunk
+    data_chunk = data(:,i:i+win);
+    
+    % demean
+    data_chunk = data_chunk - mean(data_chunk, 2);
+    
+    % get A
+    [w,A_curr,C] = arfit(data_chunk',1,1,'sbc'); % data_n should be a time chunk;
+    
+    A(:,:,i) = A_curr;
+end
+
+% initialize eigenvalues and vectors
+eig_vect = zeros(numel(x), numel(x), (n_tp - win));
+eig_val = zeros(numel(x), (n_tp - win));
+for i = 1:size(eig_val,2)
+    fprintf('\n...%d', i)
+    A_curr = A(:,:,i);
+    [vect, val] = eig(A_curr);
+    eig_val(:,i) = diag(val);
+    eig_vect(:,:,i) = vect;
+end
+
+%????
 
 %% TEST CASE 2: Noisiness
 % N waves with varying noise

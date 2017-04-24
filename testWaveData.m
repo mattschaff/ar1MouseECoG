@@ -67,7 +67,7 @@
         imagesc(combined_data(:,:,i));
         title(num2str(i));
         caxis([-1,1]);
-        pause(0.01);
+        pause(0.1);        
     end
     %% asdf
     figure(2);
