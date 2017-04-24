@@ -15,8 +15,8 @@ wave_array(1).theta = ones(1,5000).*0;
 wave_array(1).temp_freq = ones(1,5000).*100;
 wave_array(2).theta = ones(1,5000).*pi;
 wave_array(2).temp_freq = ones(1,5000).*200;
-wave_array(3).temp_freq = ones(1,5000).*50;
-wave_array(3).theta = ones(1,5000).*pi;
+%wave_array(3).temp_freq = ones(1,5000).*50;
+%wave_array(3).theta = ones(1,5000).*pi;
 %initialize grid
 x = -1:0.01:1;
 y = 0;
@@ -26,7 +26,7 @@ times = (1:5000)*.001;
 data1 = populate_wave(wave_array(1), X, Y, times);
 data3 = populate_wave(wave_array(3), X, Y, times);
 data2 = populate_wave(wave_array(2), X, Y, times);
-combined_data = data1 + data2 + data3;
+combined_data = data1 + data2;% + data3;
 combined_data_rand = combined_data + normrnd(0,.3,size(data1));
 
 %% FFT
@@ -86,19 +86,19 @@ max_amp = repmat(max_amp, [1,5000,1]);
 better_phase = wvlt_phase.*max_amp;
 imagesc(1:21, freq, squeeze(better_phase(:,2500,:)))
 colorbar
-
-% MOVIE
-% phases
-movie_times = 4000:numel(times);
-figure(1)
-for i = movie_times
-    clf
-    imagesc(1:21, freq, squeeze(wvlt_phase(:,i,:)))
-    title(num2str(i))
-    colorbar
-    caxis([-3 3]);
-    pause(.001)
-end
+% 
+% % MOVIE
+% % phases
+% movie_times = 4000:numel(times);
+% figure(1)
+% for i = movie_times
+%     clf
+%     imagesc(1:21, freq, squeeze(wvlt_phase(:,i,:)))
+%     title(num2str(i))
+%     colorbar
+%     caxis([-3 3]);
+%     pause(.001)
+% end
 
 %% AR1
 
@@ -107,7 +107,7 @@ end
 win = numel(x)*3; % twice the number of electrodes
 n_tp = size(combined_data_rand, 3);
 data = reshape(combined_data_rand, [] ,n_tp);
-n_eig = 4;
+n_eig = numel(x);
 
 % initialize A - elec x elec x time
 A = zeros(numel(x), numel(x), (n_tp - win));
@@ -133,13 +133,26 @@ parfor i = 1:n_tp - win
     %end
 
     A(:,:,i) = A_curr;
-    [vect, val] = eigs(A_curr, n_eig);
+    [vect, val] = eig(A_curr);
     eig_val(:,i) = diag(val);
     eig_vect(:,:,i) = vect;
 end
  % plot the vector from the largest eignevalues
 
-%????
+ %
+[~, idx] = sort(abs(eig_val(:,20)));
+large_vect1 = angle(eig_vect(:,(idx == 1),20));
+large_vect2 = angle(eig_vect(:,(idx == 3),20));
+
+%plot
+figure
+plot(unwrap(large_vect1))
+hold on
+plot(unwrap(large_vect2))
+xlabel('Time (samples)')
+ylabel('Phase')
+xlim([1 numel(x)])
+
 %% Test Case 1: Similar Frequency
 % 2 waves with some frequency (temporal & spatial)
 % check efficacy as lim(d_freq) --> 0
@@ -354,36 +367,49 @@ clf;
 imagesc(1:size(data,1), freq, squeeze(wvlt_phase(:,2500,:)))
 colorbar
 
-% AR1
-
+%% AR1
 %define constants
-win = numel(x)*2; % twice the number of electrodes
-n_tp = size(combined_data_rand, 3);
-data = reshape(combined_data_rand, [] ,n_tp);
+win = size(data,1)*3; % twice the number of electrodes
+n_tp = size(data, 2);
+%
+n_eig = size(data,1);
 
 % initialize A - elec x elec x time
-A = zeros(numel(x), numel(x), (n_tp - win));
-for i = 1:n_tp - win
+A = zeros(size(data,1), size(data,1), (n_tp - win));
+% initialize eigenvalues and vectors
+eig_vect = zeros(size(data,1), n_eig, (n_tp - win));
+eig_val = zeros(n_eig, (n_tp - win));
+
+parfor i = 1:n_tp - win
+    A_curr = zeros(size(data,1), size(data,1));
     fprintf('\n...%d', i)
     % get time chunk
     data_chunk = data(:,i:i+win);
     
     % demean
     data_chunk = data_chunk - mean(data_chunk, 2);
+   % y = data_chunk(:,2:end);
+   % x_hat = data_chunk(:, 1:end-1);
     
     % get A
     [w,A_curr,C] = arfit(data_chunk',1,1,'sbc'); % data_n should be a time chunk;
-    
-    A(:,:,i) = A_curr;
-end
+    %for j = 1:numel(x)
+    %    A_curr(j,:) = y(j,:)'\x_hat';
+    %end
 
-% initialize eigenvalues and vectors
-eig_vect = zeros(numel(x), numel(x), (n_tp - win));
-eig_val = zeros(numel(x), (n_tp - win));
-for i = 1:size(eig_val,2)
-    fprintf('\n...%d', i)
-    A_curr = A(:,:,i);
+    A(:,:,i) = A_curr;
     [vect, val] = eig(A_curr);
     eig_val(:,i) = diag(val);
     eig_vect(:,:,i) = vect;
 end
+
+[res, idx] = sort(eig_val(:,20));
+large_vect1 = eig_vect(:,(idx == 1),20);
+large_vect2 = eig_vect(:,(idx == 2),20);
+large_vect3 = eig_vect(:,(idx == 3),20);
+
+%plot
+figure
+plot(large_vect1)
+hold on
+plot(large_vect2)
