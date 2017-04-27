@@ -1,4 +1,4 @@
-%% TEST CASE 0: Does it work% 
+%% TEST CASE 0: Does it work% INSANITY CHECCKKKKKKKKKK
 %make data
 wave_array = struct();
 for i=1:3
@@ -11,31 +11,26 @@ for i=1:3
     wave_array(i).amplitude = ones(1,5000);
     wave_array(i).timesteps = [1:5000]; %in s
 end
-wave_array(1).theta = ones(1,5000).*0;
+wave_array(1).theta = ones(1,5000).*pi;
 wave_array(1).temp_freq = ones(1,5000).*100;
-wave_array(2).theta = ones(1,5000).*pi;
-wave_array(2).temp_freq = ones(1,5000).*200;
+wave_array(2).theta = ones(1,5000).*(0.25*pi);
+wave_array(2).temp_freq = ones(1,5000).*150;
+
 %wave_array(3).temp_freq = ones(1,5000).*50;
 %wave_array(3).theta = ones(1,5000).*pi;
 %initialize grid
-x = -1:0.01:1;
+
+x = -1:0.1:1; %21 electrodes 
 y = 0;
 [X, Y] = meshgrid(x, y);
 times = (1:5000)*.001;
 
 data1 = populate_wave(wave_array(1), X, Y, times);
-data3 = populate_wave(wave_array(3), X, Y, times);
 data2 = populate_wave(wave_array(2), X, Y, times);
 combined_data = data1 + data2;% + data3;
 combined_data_rand = combined_data + normrnd(0,.3,size(data1));
 
-%% FFT
-% this function is in the EEGPLOT toolbox
-%addpath(genpath([pwd '/powerpectra/eeglab14_0_0b']));
-% third input is srate
-spectopo(squeeze(combined_data_rand), 0, 1000)
-
-% wavelets
+%% Wavelets
 % second input (c) is standard deviation of the temporal Gaussian window times
 % pi; This defines the window length. There is a trade off between window
 % length and frequency resolution. c = 0 yields the original time-courses
@@ -47,45 +42,44 @@ spectopo(squeeze(combined_data_rand), 0, 1000)
 % Low cut off:          1/window size
 
 % define constants
-freq = 10:10:400;
+freq = 35:0.25:115;
 srate = 1000;
-windows = 100;
+windows = 20;
 peaks = zeros(1,numel(windows));
 
 % visualize peaks at pi*frequency. The change in power is due to how the
 % wavelet cuts off parts of the window based on the window size
-for i = 1:numel(windows)
-    c = windows(i)*pi;
-    
-    % 5th input is for baseline: no baseline correction here
-    [wvlt_amp, wvlt_phase] = morletwave(freq,c,squeeze(combined_data_rand),srate,0);
-    
-    %peaks(i) = max(wvlt_amp(:,:,1));
-    
-    clf;
-    imagesc(1:5000, freq, squeeze(wvlt_amp(:,:,1)))
-    colorbar
-    caxis([0, 20])
-    pause(.001)
-end
+c = windows*pi;
 
-%clf;
-%plot(windows, peaks)
+% 5th input is for baseline: no baseline correction here
+[wvlt_amp, wvlt_phase] = morletwave(freq,c,squeeze(combined_data_rand),srate,0);
 
-% phases
-clf
-subplot(2,1,1)
-imagesc(1:21, freq, squeeze(wvlt_phase(:,2500,:)))
-colorbar
-subplot(2,1,2)
+%peaks(i) = max(wvlt_amp(:,:,1));
+
+figure(1) %power spectrum
+clf;
 imagesc(1:5000, freq, squeeze(wvlt_amp(:,:,1)))
 colorbar
+caxis([0, 20])
+pause(.001)
 
+% figure(3) % phases
+% clf
+% subplot(2,1,1)
+% imagesc(1:21, freq, squeeze(wvlt_phase(:,2500,:)))
+% colorbar
+% subplot(2,1,2)
+% imagesc(1:5000, freq, squeeze(wvlt_amp(:,:,1)))
+% colorbar
+
+figure(2) %amplified phase with less noise 
+clf
 max_amp = max(wvlt_amp, [], 2);
 max_amp = repmat(max_amp, [1,5000,1]);
 better_phase = wvlt_phase.*max_amp;
 imagesc(1:21, freq, squeeze(better_phase(:,2500,:)))
 colorbar
+
 % 
 % % MOVIE
 % % phases
@@ -157,33 +151,74 @@ xlim([1 numel(x)])
 % 2 waves with some frequency (temporal & spatial)
 % check efficacy as lim(d_freq) --> 0
 % randomize other parameters (including wave type)
- srate = 1000;
-temp_freqs = 2;
-base_freq = 200; %in Hz
-delta_freq = 10; % how much to change by
-k=1;
 
-%make data
-wave_array = struct();
-for i=1:2
-    wave_array(i).type = 'plane';
-    wave_array(i).y_center = ones(1,5000);
-    wave_array(i).x_center = ones(1,5000);
-    wave_array(i).theta = ones(1,5000);
-    wave_array(i).temp_freq = ones(1,5000);
-    wave_array(i).spatial_freq = ones(1,5000)*5;
-    wave_array(i).amplitude = ones(1,5000);
-    wave_array(i).timesteps = [1:5000]; %in s
+srate = 1000;
+
+baseFreq = 50; %Hz
+freqVec = [baseFreq+.1, baseFreq+0.25, baseFreq+0.5, baseFreq+1, baseFreq+2, baseFreq+5, baseFreq+10, baseFreq+20];
+
+% define constants for wavelet
+freq = 40:0.05:80;
+srate = 1000;
+windows = 20;
+peaks = zeros(1,numel(windows));
+c = windows*pi;
+
+
+for j = 1:length(freqVec)
+
+    wave_array = struct();
+    for i=1:3
+        wave_array(i).type = 'plane';
+        wave_array(i).y_center = ones(1,5000);
+        wave_array(i).x_center = ones(1,5000);
+        wave_array(i).theta = ones(1,5000);
+        wave_array(i).temp_freq = ones(1,5000);
+        wave_array(i).spatial_freq = ones(1,5000)*5;
+        wave_array(i).amplitude = ones(1,5000);
+        wave_array(i).timesteps = [1:5000]; %in s
+    end
+    wave_array(1).theta = ones(1,5000).*pi;
+    wave_array(1).temp_freq = ones(1,5000).*baseFreq;
+    wave_array(2).theta = ones(1,5000).*(0.25*pi);
+    wave_array(2).temp_freq = ones(1,5000).*(baseFreq+feqVect(j));
+
+    %wave_array(3).temp_freq = ones(1,5000).*50;
+    %wave_array(3).theta = ones(1,5000).*pi;
+    %initialize grid
+
+    x = -1:0.1:1; %21 electrodes 
+    y = 0;
+    [X, Y] = meshgrid(x, y);
+    times = (1:5000).*(1/srate);
+
+    data1 = populate_wave(wave_array(1), X, Y, times);
+    data2 = populate_wave(wave_array(2), X, Y, times);
+    combined_data = data1 + data2;
+    combined_data_rand = combined_data + normrnd(0,.3,size(data1));
+    
+    
+    %time to do wavelet!
+    [wvlt_amp, wvlt_phase] = morletwave(freq,c,squeeze(combined_data_rand),srate,0);
+
+    figure(1) %power spectrum
+    clf;
+    imagesc(1:5000, freq, squeeze(wvlt_amp(:,:,1)))
+    colorbar
+    caxis([0, 20])
+    pause(.001)
+    
+    saveas(gca, ['/Users/adeetiaggarwal/Documents/ar1MouseECoG/images/waveletsFreqDis', num2str(freqVec(i)), '.jpg'], 'jpg')
+
+%     figure(2) %amplified phase with less noise 
+%     clf
+%     max_amp = max(wvlt_amp, [], 2);
+%     max_amp = repmat(max_amp, [1,5000,1]);
+%     better_phase = wvlt_phase.*max_amp;
+%     imagesc(1:21, freq, squeeze(better_phase(:,2500,:)))
+%     colorbar
 end
 
-% add changing freq over time
-wave_array(1).temp_freq = base_freq - delta_freq.*(sin((temp_freqs(k).*(2*pi))./srate*(1:5000)));
-
-%initialize grid
-x = -1:0.01:1;
-y = 0;
-[X, Y] = meshgrid(x, y);
-times = (1:5000)*(1/srate);
 
 %% TEST CASE 2: Noisiness
 % N waves with varying noise
