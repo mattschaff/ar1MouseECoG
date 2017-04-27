@@ -1,11 +1,6 @@
-<<<<<<< HEAD
-%% TEST CASE 0: Does it work% INSANITY CHECCKKKKKKKKKK
-%make data
-=======
 %% TEST CASE 0: Does it work?
 % Test with 1 wave, 3 different wave types, no noise
 % make data
->>>>>>> updated ssanity check and added damping times script
 wave_array = struct();
 wave_types = [{'plane'}, {'plane'}, {'rotational'}, {'target'}];
 for i = 1:4
@@ -18,18 +13,6 @@ for i = 1:4
     wave_array(i).amplitude = ones(1,5000);
     wave_array(i).timesteps = [1:5000]; %in s
 end
-<<<<<<< HEAD
-wave_array(1).theta = ones(1,5000).*pi;
-wave_array(1).temp_freq = ones(1,5000).*100;
-wave_array(2).theta = ones(1,5000).*(0.25*pi);
-wave_array(2).temp_freq = ones(1,5000).*150;
-
-%wave_array(3).temp_freq = ones(1,5000).*50;
-%wave_array(3).theta = ones(1,5000).*pi;
-%initialize grid
-
-x = -1:0.1:1; %21 electrodes 
-=======
 
 wave_array(1).theta = ones(1,5000).*pi/4;
 wave_array(1).temp_freq = ones(1,5000).*50;
@@ -41,20 +24,11 @@ wave_array(4).temp_freq = ones(1,5000).*50;
 
 %initialize grid
 x = -1:0.05:1;
->>>>>>> updated ssanity check and added damping times script
 y = 0;
 [X, Y] = meshgrid(x, y);
 times = (1:5000)*.001;
 srate = 1000;
 
-<<<<<<< HEAD
-data1 = populate_wave(wave_array(1), X, Y, times);
-data2 = populate_wave(wave_array(2), X, Y, times);
-combined_data = data1 + data2;% + data3;
-combined_data_rand = combined_data + normrnd(0,.3,size(data1));
-
-%% Wavelets
-=======
 data_plane = populate_wave(wave_array(1), X, Y, times);
 data_plane = data_plane + normrnd(0,.1,size(data_plane));
 data_plane1 = populate_wave(wave_array(2), X, Y, times);
@@ -87,7 +61,6 @@ xlabel('Time (s)'); ylabel('Electrodes'); title('Target Wave')
 %spectopo(squeeze(combined_data_rand), 0, 1000)
 
 % wavelets
->>>>>>> updated ssanity check and added damping times script
 % second input (c) is standard deviation of the temporal Gaussian window times
 % pi; This defines the window length. There is a trade off between window
 % length and frequency resolution. c = 0 yields the original time-courses
@@ -102,47 +75,6 @@ xlabel('Time (s)'); ylabel('Electrodes'); title('Target Wave')
 combined_data_rand = data_plane;
 
 % define constants
-<<<<<<< HEAD
-freq = 35:0.25:115;
-srate = 1000;
-windows = 20;
-peaks = zeros(1,numel(windows));
-
-% visualize peaks at pi*frequency. The change in power is due to how the
-% wavelet cuts off parts of the window based on the window size
-c = windows*pi;
-
-% 5th input is for baseline: no baseline correction here
-[wvlt_amp, wvlt_phase] = morletwave(freq,c,squeeze(combined_data_rand),srate,0);
-
-%peaks(i) = max(wvlt_amp(:,:,1));
-
-figure(1) %power spectrum
-clf;
-imagesc(1:5000, freq, squeeze(wvlt_amp(:,:,1)))
-colorbar
-caxis([0, 20])
-pause(.001)
-
-% figure(3) % phases
-% clf
-% subplot(2,1,1)
-% imagesc(1:21, freq, squeeze(wvlt_phase(:,2500,:)))
-% colorbar
-% subplot(2,1,2)
-% imagesc(1:5000, freq, squeeze(wvlt_amp(:,:,1)))
-% colorbar
-
-figure(2) %amplified phase with less noise 
-clf
-max_amp = max(wvlt_amp, [], 2);
-max_amp = repmat(max_amp, [1,5000,1]);
-better_phase = wvlt_phase.*max_amp;
-imagesc(1:21, freq, squeeze(better_phase(:,2500,:)))
-colorbar
-
-% 
-=======
 freq = 10:5:200;
 srate = 1000;
 windows = 50;
@@ -183,7 +115,6 @@ xlabel('Time (s)'); ylabel('Frequency (Hz)'); title('Wavelet Frequency Extractio
 
 
 %
->>>>>>> updated ssanity check and added damping times script
 % % MOVIE
 % % phases
 % movie_times = 4000:numel(times);
@@ -274,86 +205,16 @@ plot(eig_rate)
 % 2 waves with some frequency (temporal & spatial)
 % check efficacy as lim(d_freq) --> 0
 % randomize other parameters (including wave type)
-<<<<<<< HEAD
-=======
 srate = 1000;
 temp_freqs = 2;
 base_freq = 200; %in Hz
 delta_freq = 10; % how much to change by
 k=1;
->>>>>>> updated ssanity check and added damping times script
 
 srate = 1000;
 
-<<<<<<< HEAD
-baseFreq = 50; %Hz
-freqVec = [baseFreq+.1, baseFreq+0.25, baseFreq+0.5, baseFreq+1, baseFreq+2, baseFreq+5, baseFreq+10, baseFreq+20];
-
-% define constants for wavelet
-freq = 40:0.05:80;
-srate = 1000;
-windows = 20;
-peaks = zeros(1,numel(windows));
-c = windows*pi;
-
-
-for j = 1:length(freqVec)
-
-    wave_array = struct();
-    for i=1:3
-        wave_array(i).type = 'plane';
-        wave_array(i).y_center = ones(1,5000);
-        wave_array(i).x_center = ones(1,5000);
-        wave_array(i).theta = ones(1,5000);
-        wave_array(i).temp_freq = ones(1,5000);
-        wave_array(i).spatial_freq = ones(1,5000)*5;
-        wave_array(i).amplitude = ones(1,5000);
-        wave_array(i).timesteps = [1:5000]; %in s
-    end
-    wave_array(1).theta = ones(1,5000).*pi;
-    wave_array(1).temp_freq = ones(1,5000).*baseFreq;
-    wave_array(2).theta = ones(1,5000).*(0.25*pi);
-    wave_array(2).temp_freq = ones(1,5000).*(baseFreq+feqVect(j));
-
-    %wave_array(3).temp_freq = ones(1,5000).*50;
-    %wave_array(3).theta = ones(1,5000).*pi;
-    %initialize grid
-
-    x = -1:0.1:1; %21 electrodes 
-    y = 0;
-    [X, Y] = meshgrid(x, y);
-    times = (1:5000).*(1/srate);
-
-    data1 = populate_wave(wave_array(1), X, Y, times);
-    data2 = populate_wave(wave_array(2), X, Y, times);
-    combined_data = data1 + data2;
-    combined_data_rand = combined_data + normrnd(0,.3,size(data1));
-    
-    
-    %time to do wavelet!
-    [wvlt_amp, wvlt_phase] = morletwave(freq,c,squeeze(combined_data_rand),srate,0);
-
-    figure(1) %power spectrum
-    clf;
-    imagesc(1:5000, freq, squeeze(wvlt_amp(:,:,1)))
-    colorbar
-    caxis([0, 20])
-    pause(.001)
-    
-    saveas(gca, ['/Users/adeetiaggarwal/Documents/ar1MouseECoG/images/waveletsFreqDis', num2str(freqVec(i)), '.jpg'], 'jpg')
-
-%     figure(2) %amplified phase with less noise 
-%     clf
-%     max_amp = max(wvlt_amp, [], 2);
-%     max_amp = repmat(max_amp, [1,5000,1]);
-%     better_phase = wvlt_phase.*max_amp;
-%     imagesc(1:21, freq, squeeze(better_phase(:,2500,:)))
-%     colorbar
-end
-=======
 % add changing freq over time
 wave_array(1).temp_freq = base_freq - delta_freq.*(sin((temp_freqs(k).*(2*pi))./srate.*(1:5000)));
->>>>>>> updated ssanity check and added damping times script
 
 
 %% TEST CASE 2: Noisiness
