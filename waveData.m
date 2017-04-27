@@ -335,6 +335,9 @@ legend('Eigenvalue 1', 'True Wave')
 xlabel('Time (s)') 
 xlim([win, n_tp]./srate);
 
+% ar1_freq_by_time = angle(eig_val(1,:))./(2*pi))*srate
+% wavelet_frq_by_time ~ wvlt_amp(freq,time,channel)
+
 figure(1)
 clf;
 imagesc(1:5000, freq, squeeze(wvlt_amp(:,:,1)))
