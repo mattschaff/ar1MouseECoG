@@ -1,4 +1,4 @@
-function [ avg_zscore ] = return_avg_zcore( true_parameters, trial_parameters )
+function [ avg_zscore, zscores ] = return_avg_zcore( true_parameters, trial_parameters )
 %UNTITLED Summary of this function goes here
 %   Inputs
     % true_parameters = (matrix) 1 X time 
@@ -15,9 +15,9 @@ end
 %
 %trial_parameters = [3 3 4 5 6 7; 2 3 4 5 6 7; 2 3 4 5 6 7; 2 3 5 5 6 7; 5 3 4 5 6 7;];
 %true_parameters = [2 2 2 2 2 2];
-trials_mean = mean(trial_parameters, 1);
-trials_stdev = std(trial_parameters);
-zscores = (true_parameters - trials_mean)/trials_stdev;
-avg_zscore = mean(zscores); 
+trials_mean = nanmean(trial_parameters, 1);
+trials_stdev = nanstd(trial_parameters);
+zscores = (true_parameters - trials_mean)./(trials_stdev + .000001);
+avg_zscore = nanmean(zscores); 
 end
 
