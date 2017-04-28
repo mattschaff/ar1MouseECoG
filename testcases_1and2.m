@@ -91,7 +91,7 @@ wavelet_output = zeros(2,4536);
             data_chunk = data(:,i:i+win);
 
             % demean
-            data_chunk = data_chunk - mean(data_chunk, 2);
+            data_chunk = data_chunk - repmat(mean(data_chunk,2), [1, size(data_chunk,2)]);
            % y = data_chunk(:,2:end);
            % x_hat = data_chunk(:, 1:end-1);
 

@@ -17,7 +17,7 @@ end
 %true_parameters = [2 2 2 2 2 2];
 trials_mean = nanmean(trial_parameters, 1);
 trials_stdev = nanstd(trial_parameters);
-zscores = (true_parameters - trials_mean)./(trials_stdev + .000001);
+zscores = abs((true_parameters - trials_mean)./(trials_stdev + .000001));
 avg_zscore = nanmean(zscores); 
 end
 
