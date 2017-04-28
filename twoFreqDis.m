@@ -8,7 +8,7 @@ x = -1:0.1:1; %21 electrodes
 y = 0;
 
 baseFreq = 50; %Hz
-freqVec = [baseFreq+.1, baseFreq+0.25, baseFreq+0.5, baseFreq+1, baseFreq+2, baseFreq+5, baseFreq+10, baseFreq+20];
+freqVec = [baseFreq+.1, baseFreq+0.25, baseFreq+0.5, baseFreq+1, baseFreq+2, baseFreq+5, baseFreq+10];
 
 % define constants for wavelet
 freq = 40:0.05:80;
@@ -76,7 +76,7 @@ for j = 1:length(freqVec)
 %     better_phase = wvlt_phase.*max_amp;
 %     imagesc(1:21, freq, squeeze(better_phase(:,2500,:)))
 %     colorbar
-
+% 
 %     % ar1
 %     %define constants
 %     win = numel(x)*10; % twice the number of electrodes
@@ -127,13 +127,13 @@ for j = 1:length(freqVec)
 %     plot(unwrap(eigFreq1))
 %     hold on
 %     plot(unwrap(eigFreq3), 'r')
-%     title(['AR1 Frequency Discrimination', num2str(baseFreq), ' Hz vs. ', num2str(freqVec(j)), ' Hz'])
-%     xlabel('Time (samples)')
+%     title(['AR1 Frequency Discrimination ', num2str(baseFreq), ' Hz vs. ', num2str(freqVec(j)), ' Hz'])
+%     xlabel('Electrode')
 %     ylabel('Frequency')
 %     legend(num2str(av_ab_eig_val1), num2str(av_ab_eig_val3))
 %     xlim([1 numel(x)])
 %     
-%     saveas(gca, ['/Users/adeetiaggarwal/Documents/ar1MouseECoG/images/AR1FreqDisTakeTwo', num2str(freqVec(j)), '.jpg'], 'jpg')
-
+%     saveas(gca, ['/Users/adeetiaggarwal/Documents/ar1MouseECoG/images/AR1FreqDis', num2str(freqVec(j)), '.jpg'], 'jpg')
+% 
 
 end
