@@ -1,4 +1,5 @@
-    %% Simulation Data: simple planer model (one wave with noise)
+    %% Simulation Data: simple planer model (one wave with noise
+    %makes wave figures
     wave_array = struct();
     for i=1:10
         wave_array(i).type = 'target'; 
@@ -69,7 +70,7 @@
         caxis([-1,1]);
         pause(0.1);        
     end
-    %% asdf
+    %% Make more plots
     figure(2);
     clf;
     hold on;
