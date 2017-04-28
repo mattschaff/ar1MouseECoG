@@ -8,7 +8,19 @@ temp_freqs = 1;
 base_freq = 35; %in Hz
 delta_freq = 1; % how much to change by
 k=1;
+output_master = struct();
 
+for b = 1:3
+    if b == 1
+         temp_freqs = 1;
+    end
+    if b == 2
+         temp_freqs = 2;
+    end
+    if b == 3
+         temp_freqs = 5;
+    end
+    disp(['Analyzing frequency change of ' num2str(temp_freqs) ' Hz']);
 %make data
 wave_array = struct();
 for i=1
@@ -36,12 +48,13 @@ combined_data_rand = data; %+ normrnd(0,2,size(data));
 combined_data = combined_data_rand; %for ar1
 yetAnotherData = data;
 data = squeeze(data);
-ar1_output = zeros(100,4536);
-wavelet_output = zeros(100,4536);
-analysis_output = struct();
-    for j = 1:2
+
+ar1_output = zeros(2,4536);
+wavelet_output = zeros(2,4536);
+    for j = 1:10
+        disp(['   Evaluating trial ' num2str(j)]);
     %add new randomness to wave
-        combined_data_rand = data + normrnd(0,2,size(data));
+        combined_data_rand = data + normrnd(0,0.317,size(data));
     % wave done, now use wavelet to get phase
         freq = 1:.1:100;
         srate = 1000;
@@ -68,8 +81,10 @@ analysis_output = struct();
         % initialize eigenvalues and vectors
         eig_vect = zeros(numel(x), n_eig, (n_tp - win));
         eig_val = zeros(n_eig, (n_tp - win));
-
-        for i = 1:n_tp - win
+        disp('   Calculating AR1');
+        parfor_progress(n_tp - win);
+        parfor i = 1:n_tp - win
+            parfor_progress;
             A_curr = zeros(numel(x), numel(x));
             %fprintf('\n...%d', i)
             % get time chunk
@@ -91,7 +106,7 @@ analysis_output = struct();
             eig_val(:,i) = diag(val);
             eig_vect(:,:,i) = vect;
         end
-
+        parfor_progress(0);
     %correct ar1 output
         ar1_extracted_frequencies = (angle(eig_val(1,:))./(2*pi)).*srate;
 % 
@@ -106,8 +121,6 @@ analysis_output = struct();
      %take out first & last 200 ms
      ar1_extracted_frequencies = ar1_extracted_frequencies(201:end-201);
      wavelet_extracted_frequencies = wavelet_extracted_frequencies(201:end-201);
-        disp(['ar1 - ' num2str(numel(ar1_extracted_frequencies))]);
-        disp(['wavelet - ' num2str(numel(wavelet_extracted_frequencies))]);
     %load into output array
     ar1_output(j,:) = ar1_extracted_frequencies;
     wavelet_output(j,:) = wavelet_extracted_frequencies;
@@ -120,13 +133,14 @@ analysis_output = struct();
     frequencies = diff(peakTimes);
     frequencies(end+1) = frequencies(end);
     trueFrequencies = [interp1(frequencyTimes, srate./frequencies, 1:5000)];
-    sigma = 50;
+    sigma = 40;
     x = -3*sigma:3*sigma;
     gaussianFilter = exp(-x.^2/(2*sigma^2));
     gaussianFilter = gaussianFilter ./ sum(gaussianFilter);
     trueFrequencies = convn(trueFrequencies, gaussianFilter, 'same');
     trueFrequencies = trueFrequencies(201:end-201);
     % cut out additional window length
+    % trueFrequencies = trueFrequencies(64:end);
     trueFrequencies = trueFrequencies(win+1:end);
     %trueFrequencies(1:63) = [];
     %trueFrequencies(1:200) = [];
@@ -135,3 +149,10 @@ analysis_output = struct();
 % run stats
     wavelet_zscore = return_avg_zcore(trueFrequencies, wavelet_output);
     ar1_zscore = return_avg_zcore(trueFrequencies, ar1_output);
+    disp(['   Wavelet ZScore = ' num2str(wavelet_zscore)]);
+    disp(['   AR1 ZScore = ' num2str(ar1_zscore)]);
+    output_master(b).wavelet_zscore = wavelet_zscore;
+    output_master(b).ar1_zscore = ar1_zscore;
+    output_master(b).temp_freqs = temp_freqs;
+end
+save('temporal_resolution_output.mat', 'output_master');
